@@ -1,0 +1,11 @@
+{
+  "name": "a-little-board",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check scripts/app.js && node --check scripts/github.js && node --test tests/*.test.mjs"
+  }
+}

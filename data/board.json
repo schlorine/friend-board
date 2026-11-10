@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "revision": "welcome-v1",
+  "publishedAt": "2026-11-10T00:00:00.000Z",
+  "cards": [
+    {"id":"welcome","kind":"text","title":"给朋友的一张便条","body":"<p>这里收着一些值得分享的东西。</p><p>好用的网站，随手记下的想法，还有想慢慢读完的文字。</p><p><strong>有用就拿走，喜欢就常来。</strong></p>","url":"","linkLabel":""},
+    {"id":"example-mdn","kind":"link","title":"示例 · MDN Web Docs","body":"<p>查一个网页功能怎么用，从这里开始。</p><p>浏览器、HTML、CSS 和 JavaScript 的文档与示例，适合随用随查。</p>","url":"https://developer.mozilla.org/zh-CN/","linkLabel":"打开文档"},
+    {"id":"example-thought","kind":"text","title":"示例 · 给想法留一格","body":"<p>这一格也可以只写文字。</p><p>一段随笔、一句摘记，或者一个尚未成形的想法，都可以慢慢放在这里。</p><p><em>不必每次都写得很完整。</em></p>","url":"","linkLabel":""},
+    {"id":"example-gutenberg","kind":"link","title":"示例 · 古登堡计划","body":"<p>想找一本可以在线阅读的老书，可以来这里逛逛。</p><p>这是一个电子书项目，收录大量公版作品；阅读与使用时留意所在地的版权规定。</p>","url":"https://www.gutenberg.org/","linkLabel":"去找本书"},
+    {"id":"example-note","kind":"text","title":"示例 · 最近在读什么","body":"<p>记录一本书、一篇文章，或者一个值得回来看的句子。</p><p>文字可以<strong>加粗</strong>、<em>斜体</em>，也可以加上<u>下划线</u>，正文中照样能放链接。</p>","url":"","linkLabel":""},
+    {"id":"example-wikimedia","kind":"link","title":"示例 · Wikimedia Commons","body":"<p>图片、声音和其他媒体资料的共享素材库。</p><p>找素材时可以从这里出发，使用前查看每个文件各自的授权说明。</p>","url":"https://commons.wikimedia.org/","linkLabel":"浏览素材"}
+  ]
+}

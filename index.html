@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f1e8">
+  <meta name="description" content="好用的链接，随手的想法，还有想分享给你的文字。一个给朋友的公开小看板。">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com https://*.github.io; base-uri 'self'; form-action 'none'; object-src 'none'">
+  <title>一小格 · 好东西，一起分享</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/quill.snow.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./vendor/quill.js" defer></script>
+  <script src="./scripts/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="#board">跳到卡片</a>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="一小格，首页">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 5v22M5 16h22M8 8l16 16M24 8L8 24" stroke="currentColor" stroke-width="3"/></svg></span>
+        <span class="brand-name">一小格<span class="brand-note">A LITTLE BOARD</span></span>
+      </a>
+      <div class="header-actions">
+        <span id="publish-status" class="mode-pill" role="status" hidden></span>
+        <button id="settings-button" class="icon-button" aria-label="发布设置" title="发布设置" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+        <button id="publish-button" class="button button-primary" hidden>发布更改 <span aria-hidden="true">↗</span></button>
+        <button id="leave-admin" class="button button-light button-small" hidden>退出管理</button>
+        <span id="public-note" class="public-note">给朋友的公开小看板 <span aria-hidden="true">↗</span></span>
+      </div>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">SMALL THINGS, WORTH SHARING.</p><h1 id="page-title">好东西，<span>一起分享。</span></h1><p class="intro-copy">好用的链接，随手的想法，<br class="mobile-break">还有想分享给你的文字。</p></div>
+        <div class="intro-mark" aria-hidden="true"><svg viewBox="0 0 120 120" fill="none"><path d="M60 7l9 29 27-17-12 30 30 9-30 9 13 28-28-14-9 32-10-31-28 15 14-29L7 59l29-10-15-28 29 15L60 7Z" fill="#ffdf73" stroke="#161616" stroke-width="3"/><path d="M43 59l12 12 24-26" stroke="#161616" stroke-width="5" stroke-linecap="square"/></svg><span>KEEP THE GOOD STUFF</span></div>
+      </section>
+      <section id="board" aria-labelledby="board-heading">
+        <div class="board-topline"><h2 id="board-heading" class="board-label">一些发现，也有一些想法 <span aria-hidden="true">↓</span></h2><span id="board-count" class="board-count"></span></div>
+        <p id="board-notice" class="board-notice" role="status" hidden></p>
+        <div id="board-grid" class="board-grid" aria-label="分享卡片" aria-busy="true"></div>
+        <div id="board-error" class="empty-state" hidden><h3>暂时没能打开看板</h3><p>请检查网络后重试，本地草稿会继续保留。</p><button id="retry-load" class="button button-light">重新加载</button></div>
+      </section>
+    </main>
+    <footer class="site-footer"><p class="footer-note">一小格空间，放一点值得分享的东西。</p><button id="admin-trigger" class="admin-trigger">管理看板 <span aria-hidden="true">↗</span></button></footer>
+  </div>
+
+  <dialog id="reader-dialog" class="modal modal-reader" aria-labelledby="reader-title">
+    <div class="modal-header"><span id="reader-kind" class="modal-kicker"></span><button class="icon-button" data-close="reader-dialog" aria-label="关闭阅读">×</button></div>
+    <div class="modal-body"><h2 id="reader-title" class="reader-title"></h2><div id="reader-body" class="reader-body"></div><a id="reader-link" class="reader-link button button-primary" target="_blank" rel="noopener noreferrer" hidden></a></div>
+    <div id="reader-admin-actions" class="modal-footer" hidden><button id="delete-card" class="button button-danger button-small">删除卡片</button><button id="edit-card" class="button button-primary">编辑卡片 <span aria-hidden="true">↗</span></button></div>
+  </dialog>
+
+  <dialog id="editor-dialog" class="modal modal-editor" aria-labelledby="editor-heading">
+    <div class="modal-header"><div><p class="modal-kicker">MAKE A LITTLE NOTE</p><h2 id="editor-heading">新建卡片</h2></div><button class="icon-button" data-close="editor-dialog" aria-label="关闭编辑">×</button></div>
+    <form id="editor-form" novalidate>
+      <div class="modal-body">
+        <div class="form-field"><label for="card-title">标题</label><input id="card-title" name="title" maxlength="120" autocomplete="off" placeholder="给这一格起个名字"></div>
+        <div class="form-field"><label id="body-label">正文</label><div id="editor-toolbar" class="editor-toolbar" role="toolbar" aria-label="文字格式"><button type="button" class="ql-bold" aria-label="加粗" title="加粗"></button><button type="button" class="ql-italic" aria-label="斜体" title="斜体"></button><button type="button" class="ql-underline" aria-label="下划线" title="下划线"></button><span class="toolbar-separator" aria-hidden="true"></span><button type="button" class="ql-link" aria-label="插入超链接" title="插入超链接"></button></div><div id="rich-editor"></div></div>
+        <label class="checkbox-field" for="card-kind"><input id="card-kind" type="checkbox"><span><strong>作为链接卡片</strong><span class="field-note">为这一格增加一个主链接入口，自动使用浅蓝色。</span></span><span class="type-swatch" aria-hidden="true"></span></label>
+        <div id="link-fields" class="link-fields" hidden><div class="form-field"><label for="card-url">主链接网址</label><input id="card-url" name="url" type="url" placeholder="https://example.com" autocomplete="url" spellcheck="false"></div><div class="form-field"><label for="card-link-label">入口文字 <span class="optional">选填</span></label><input id="card-link-label" name="linkLabel" maxlength="40" placeholder="访问网站"></div></div>
+        <p id="editor-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="modal-footer"><span id="draft-save-note" class="saved-note" role="status">修改会自动留在本地</span><button type="submit" class="button button-primary">完成 <span aria-hidden="true">✓</span></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="link-dialog" class="modal modal-link" aria-labelledby="link-heading">
+    <div class="modal-header"><h2 id="link-heading">插入超链接</h2><button class="icon-button" data-close="link-dialog" aria-label="关闭链接设置">×</button></div>
+    <form id="link-form" novalidate><div class="modal-body"><div class="form-field"><label for="inline-link-url">链接网址</label><input id="inline-link-url" type="url" placeholder="https://example.com" required></div><div class="form-field"><label for="inline-link-text">显示文字</label><input id="inline-link-text" placeholder="链接的名称" maxlength="200"></div><p id="link-error" class="form-error" role="alert" hidden></p></div><div class="modal-footer"><button id="unlink-button" class="button button-light" type="button">移除链接</button><button class="button button-primary" type="submit">应用链接 ↗</button></div></form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="modal modal-settings" aria-labelledby="settings-heading">
+    <div class="modal-header"><div><p class="modal-kicker">JUST FOR THE AUTHOR</p><h2 id="settings-heading">管理看板</h2></div><button class="icon-button" data-close="settings-dialog" aria-label="关闭管理设置">×</button></div>
+    <form id="settings-form"><div class="modal-body"><p id="settings-intro" class="settings-intro">在这里整理卡片，写好后再发布给朋友。</p><div class="form-field"><label for="repo-name">GitHub 仓库</label><input id="repo-name" placeholder="用户名/仓库名" autocomplete="off" spellcheck="false"><p class="field-note">保存网页与公开内容的仓库。</p></div><div class="form-field"><label for="github-token">仓库访问令牌</label><input id="github-token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><p class="field-note">仅在当前页面会话中使用，关闭后清除。只需此仓库的 Contents 读写权限。</p></div><details class="setup-help"><summary>如何获取访问令牌？</summary><p>在 GitHub 创建细粒度访问令牌，选择这个仓库，并授予 Contents 的 Read and write 权限。请勿将令牌写进卡片。</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">前往 GitHub 设置 ↗</a></details><p id="settings-error" class="form-error" role="alert" hidden></p></div><div class="modal-footer"><button id="local-mode-button" type="button" class="button button-light">先在本地编辑</button><button id="connect-button" type="submit" class="button button-primary">连接并管理 ↗</button></div></form>
+  </dialog>
+
+  <dialog id="publish-dialog" class="modal modal-publish" aria-labelledby="publish-heading">
+    <div class="modal-header"><div><p class="modal-kicker">READY TO SHARE?</p><h2 id="publish-heading">发布更改</h2></div><button class="icon-button" data-close="publish-dialog" aria-label="关闭发布窗口">×</button></div>
+    <div class="modal-body"><p id="publish-summary" class="publish-summary"></p><div id="publish-detail" class="publish-state" role="status"></div><p id="publish-error" class="form-error" role="alert" hidden></p><div id="conflict-actions" hidden><p class="field-note">本地草稿已保留。请先下载备份，再读取云端新版，手动整理需要保留的修改。</p><button id="export-draft" class="button button-light button-small">下载本地草稿</button><button id="load-remote" class="button button-light button-small" disabled>备份后读取云端</button></div></div>
+    <div class="modal-footer"><button class="button button-light" data-close="publish-dialog">稍后再发</button><button id="confirm-publish" class="button button-primary">确认发布 ↗</button></div>
+  </dialog>
+
+  <dialog id="delete-dialog" class="modal modal-confirm" aria-labelledby="delete-heading"><div class="modal-header"><h2 id="delete-heading">删除这一格？</h2><button class="icon-button" data-close="delete-dialog" aria-label="取消删除">×</button></div><div class="modal-body"><p>先从本地草稿移除，发布后才会更新公开看板。</p></div><div class="modal-footer"><button class="button button-light" data-close="delete-dialog">保留卡片</button><button id="confirm-delete" class="button button-danger">删除卡片</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden><span id="toast-message"></span><button id="toast-action" hidden></button></div>
+  <noscript><p class="empty-state">请启用浏览器的 JavaScript 来阅读看板。</p></noscript>
+</body>
+</html>
