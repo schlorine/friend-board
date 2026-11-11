@@ -96,8 +96,6 @@ function renderBoard() {
     article.tabIndex = 0;
     article.setAttribute('aria-label', `${card.kind === 'link' ? '链接' : '文字'}卡片：${displayTitle(card)}，展开阅读`);
     article.setAttribute('aria-haspopup', 'dialog');
-    const top = makeElement('div', 'card-top');
-    top.append(makeElement('span', 'card-type', card.kind === 'link' ? '链接 ↗' : '文字'));
     if (isAdmin) {
       const handle = makeElement('button', 'drag-handle', '⠿');
       handle.type = 'button';
@@ -106,9 +104,9 @@ function renderBoard() {
       handle.addEventListener('pointerdown', event => startDrag(event, card.id, article));
       handle.addEventListener('click', event => event.stopPropagation());
       handle.addEventListener('keydown', event => keyboardMove(event, card.id, handle));
-      top.append(handle);
+      article.append(handle);
     }
-    article.append(top, makeElement('h2', 'card-title', displayTitle(card)), makeElement('p', 'card-preview', plainText(card.body)));
+    article.append(makeElement('h2', 'card-title', displayTitle(card)), makeElement('p', 'card-preview', plainText(card.body)));
     const bottom = makeElement('div', 'card-bottom');
     bottom.append(makeElement('span', 'card-index', String(index + 1).padStart(2, '0')));
     const url = card.kind === 'link' ? safeUrl(card.url) : '';
