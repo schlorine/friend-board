@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": "913ac3f2-fa0b-4dfa-a5d9-e7ef9c2b412b",
-  "publishedAt": "2026-11-11T14:37:18.284Z",
+  "revision": "43fa374b-3714-43e3-a2a6-e82b1be93a8f",
+  "publishedAt": "2026-11-11T14:57:09.353Z",
   "cards": [
     {
       "id": "welcome",
@@ -55,7 +55,7 @@
       "id": "dfad6f25-6e2b-4f1b-a276-77b482385916",
       "kind": "link",
       "title": "【小轩整理】考研信息",
-      "body": "<p>完成了一图流~包括考研时间线、相关概念和各科题型与考查范围ww</p>",
+      "body": "<p>完成了一图流~包括考研时间线、相关概念和各科题型与考查范围ww</p><p>主要参考了GPT，然后用小红书复核了一下（渲染焦虑内容还是一如既往多），应该足够完善可信了！</p>",
       "url": "https://1857789216.share.123pan.cn/123pan/mtHSvd-4abb?pwd=T8Xs#",
       "linkLabel": "123云盘"
     }
