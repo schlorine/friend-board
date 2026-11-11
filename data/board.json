@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": "0e9c23ff-f6b4-47f8-b730-0790d6eb24fa",
-  "publishedAt": "2026-11-11T02:47:35.990Z",
+  "revision": "9544d76f-bee6-4444-80ce-595ec40d6409",
+  "publishedAt": "2026-11-11T11:25:16.480Z",
   "cards": [
     {
       "id": "welcome",
@@ -12,12 +12,44 @@
       "linkLabel": ""
     },
     {
-      "id": "example-wikimedia",
+      "id": "c3598315-6b02-47ba-8cf3-ba5c4266e7d8",
+      "kind": "text",
+      "title": "关于Markdown",
+      "body": "<p>这个最好学一学！很方便！</p><p>具体来说作用就是<strong>非常方便的一种排版语言</strong>，比如**加粗**，*斜体*，#标题等等，用习惯了后几乎能边打字边排版特别好用！</p><p>然后我觉得最好用的markdown编辑器是<strong>Typora</strong>，还可以自己定主题，我大一买了永久激活码，可以用在三台设备，有空我在你电脑上也装一个</p>",
+      "url": "",
+      "linkLabel": ""
+    },
+    {
+      "id": "e414bc8b-8d52-4a49-946c-5650fddb17f6",
+      "kind": "text",
+      "title": "关于Github",
+      "body": "<p><strong>打开github需要开VPN</strong></p><p>是一个代码托管协作平台，主要是<strong>程序员开发项目</strong>用，一些<strong>游戏、软件、mod</strong>等也会在这里发布。也有不少人会在上面<strong>分享资料</strong>。<em>这个网站就是托管在github的。</em></p>",
+      "url": "",
+      "linkLabel": ""
+    },
+    {
+      "id": "71170837-ae02-464a-a7ff-b8cb919f9879",
       "kind": "link",
-      "title": "哔哩哔哩",
-      "body": "<p>bilibili</p>",
-      "url": "https://space.bilibili.com/360212337?spm_id_from=333.1387.fans.user_card.click",
-      "linkLabel": "这是？"
+      "title": "NOTES网页",
+      "body": "<p>就是这个网页的链接~</p><p>https://schlorine.github.io/friend-board/</p>",
+      "url": "https://schlorine.github.io/friend-board/",
+      "linkLabel": "github"
+    },
+    {
+      "id": "38c963e0-1009-44fc-bd2b-c671e12fcec2",
+      "kind": "link",
+      "title": "四六级历年真题",
+      "body": "<p>github网站，可以点开后在下面的说明里按需下载</p><p></p>",
+      "url": "https://github.com/0609x/CET46-Resources",
+      "linkLabel": "github"
+    },
+    {
+      "id": "0fe0c336-eff5-42a6-b8e7-8c880528feb2",
+      "kind": "link",
+      "title": "考研历年真题",
+      "body": "<p>包括英语、政治、数学三科共六份试题，为了方便下载我上传到了我的123云盘~（<em>btw我看123云盘是免登录不限速下载，整合到这里你可以一键操作方便些，如果实际下载比较麻烦以后换别的渠道或者直接贴github原链接了）</em></p><p>如果你需要github原链接可以看：https://github.com/CHNragdoll/anki-pipeline</p>",
+      "url": "https://1857789216.share.123pan.cn/123pan/mtHSvd-UHfb",
+      "linkLabel": "123云盘"
     }
   ]
 }
