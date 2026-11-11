@@ -1,5 +1,6 @@
-import { safeUrl, validateBoard, cloneBoard, cardFingerprint, swapCards, inferConfig, checkBaseline } from './model.js';
+import { safeUrl, validateBoard, cloneBoard, cardFingerprint, swapCards, inferConfig, checkBaseline } from './model.js?v=edit-remember';
 import { fetchBoard, verifyRepository, publishBoard, waitForLive } from './github.js';
+import { hasRememberedToken, loadRememberedToken, saveRememberedToken, clearRememberedToken } from './credentials.js';
 
 const $ = id => document.getElementById(id);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -12,6 +13,7 @@ let storageOK = true, editingId = null, isNewCard = false, currentId = null, qui
 let savedLinkRange = null, pendingDeployment = null, deploymentController = null, conflict = false;
 let toastTimer, dragState = null, clickSuppressedUntil = 0, undoDeletion = null;
 let storageConflict = false;
+let rememberedToken = false, credentialTask = null, rememberedLookup = null;
 
 function readStorage(key) {
   try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; }
@@ -148,12 +150,12 @@ function updateStatus(message) {
   $('publish-status').hidden = !isAdmin;
   $('board-notice').hidden = !isAdmin || (!conflict && storageOK && !storageConflict);
   $('board-notice').textContent = storageConflict ? '另一个窗口更新了草稿。本窗口的后续修改暂不覆盖保存，请下载备份后重新载入。' : !storageOK ? '本地保存暂不可用，请保留此页面并备份草稿。' : '云端已有更新，本地草稿已保留。发布前请在发布窗口备份并读取新版。';
+  updateCredentialControls();
 }
 function setAdmin(enabled) {
   isAdmin = enabled;
   document.body.classList.toggle('is-admin', enabled);
   for (const id of ['publish-status', 'settings-button', 'publish-button', 'leave-admin']) $(id).hidden = !enabled;
-  $('admin-trigger').textContent = enabled ? '发布设置 ↗' : '管理看板 ↗';
   renderBoard(); updateStatus();
 }
 function openReader(id) {
@@ -164,6 +166,7 @@ function openReader(id) {
   $('reader-kind').textContent = card.kind === 'link' ? 'LINK / 链接' : 'NOTE / 文字';
   $('reader-title').textContent = displayTitle(card);
   $('reader-body').innerHTML = sanitizeHTML(card.body);
+  $('reader-body').dataset.bodySize = card.bodySize || 'normal';
   const url = card.kind === 'link' ? safeUrl(card.url) : '';
   $('reader-link').hidden = !url;
   if (url) { $('reader-link').href = url; $('reader-link').textContent = `${card.linkLabel.trim() || '访问网站'} ↗`; }
@@ -197,6 +200,8 @@ function openEditor(id) {
   $('card-kind').checked = card.kind === 'link';
   $('card-url').value = card.url;
   $('card-link-label').value = card.linkLabel;
+  $('body-size').value = card.bodySize || 'normal';
+  $('rich-editor').dataset.bodySize = $('body-size').value;
   $('link-fields').hidden = card.kind !== 'link';
   $('editor-dialog').dataset.kind = card.kind;
   quill.setContents(quill.clipboard.convert({ html: sanitizeHTML(card.body) }), 'silent');
@@ -208,8 +213,10 @@ function openEditor(id) {
   $('card-title').focus();
 }
 function getEditorCard() {
-  return { id: editingId, kind: $('card-kind').checked ? 'link' : 'text', title: $('card-title').value,
+  const card = { id: editingId, kind: $('card-kind').checked ? 'link' : 'text', title: $('card-title').value,
     body: sanitizeHTML(quill.getSemanticHTML()), url: $('card-url').value.trim(), linkLabel: $('card-link-label').value.trim() };
+  if ($('body-size').value === 'large') card.bodySize = 'large';
+  return card;
 }
 function saveEditorInput() {
   if (editorLoading || !editingId || !isAdmin || busy) return;
@@ -225,7 +232,8 @@ function finishEditor(event) {
   const card = getEditorCard();
   if (!contentful(card)) { setError('editor-error', '先写一点标题或正文，再保存这一格。'); return; }
   if (card.kind === 'link' && !safeUrl(card.url)) { setError('editor-error', '请填写以 https:// 或 http:// 开头的主链接网址。'); $('card-url').focus(); return; }
-  saveEditorInput(); closeEditor();
+  setError('editor-error');
+  saveEditorInput();
 }
 function closeEditor() {
   if (quill && editingId) {
@@ -260,58 +268,205 @@ function applyInlineLink(event) {
   saveEditorInput();
 }
 
-function openSettings() {
-  $('repo-name').value = config.owner && config.repo ? `${config.owner}/${config.repo}` : '';
-  $('github-token').value = '';
-  $('settings-intro').textContent = connected ? '仓库已连接。令牌仅在当前页面会话中使用。' : '在这里整理卡片，写好后再发布给朋友。';
-  setError('settings-error'); openDialog('settings-dialog');
+function repositoryName() {
+  return config?.owner && config.repo ? `${config.owner}/${config.repo}` : '';
 }
-async function connectRepository(event) {
-  event.preventDefault();
-  const fullName = $('repo-name').value.trim();
-  if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(fullName)) { setError('settings-error', '请填写“用户名/仓库名”。'); return; }
-  const newToken = $('github-token').value.trim() || token;
-  if (!newToken) { setError('settings-error', '请输入只授予此仓库读写权限的访问令牌。'); return; }
+
+function updateCredentialControls() {
+  const toggle = isAdmin || connected || rememberedToken;
+  const trigger = $('admin-trigger');
+  trigger.textContent = toggle ? `管理模式 · ${isAdmin ? '开' : '关'}` : '管理看板 ↗';
+  if (toggle) trigger.setAttribute('aria-pressed', String(isAdmin));
+  else trigger.removeAttribute('aria-pressed');
+  trigger.disabled = !published || busy || Boolean(credentialTask);
+  const formMatchesRepository = $('repo-name').value.trim().toLowerCase() === repositoryName().toLowerCase();
+  const forget = $('forget-token');
+  if (forget) {
+    forget.hidden = !rememberedToken || !formMatchesRepository;
+    forget.disabled = Boolean(credentialTask);
+  }
+  $('connect-button').disabled = Boolean(credentialTask);
+  $('connect-button').textContent = credentialTask?.kind === 'connect' ? '正在连接…' : '连接并管理 ↗';
+  $('local-mode-button').disabled = Boolean(credentialTask);
+  $('settings-button').disabled = busy || Boolean(credentialTask);
+  $('settings-intro').textContent = formMatchesRepository && rememberedToken
+    ? '此浏览器已记住这个仓库的令牌。'
+    : connected ? '仓库已连接。令牌会在关闭页面后清除。' : '在这里整理卡片，写好后再发布给朋友。';
+}
+
+async function refreshRememberedToken() {
+  if (credentialTask) return;
+  const lookup = {};
+  rememberedLookup = lookup;
+  const repository = repositoryName();
+  let exists = false;
+  try {
+    if (repository) exists = await hasRememberedToken(storePrefix, repository);
+  } catch { /* The public board and session-only connection still work. */ }
+  if (rememberedLookup === lookup && repository === repositoryName()) {
+    rememberedToken = exists;
+    updateCredentialControls();
+  }
+}
+
+function startCredentialTask(kind) {
+  rememberedLookup = null;
+  const task = { kind };
+  credentialTask = task;
+  updateCredentialControls();
+  return task;
+}
+
+function isCurrentCredentialTask(task) {
+  return credentialTask === task && !task.cancelled && (task.kind !== 'connect' || $('settings-dialog').open);
+}
+
+function finishCredentialTask(task) {
+  if (credentialTask !== task) return;
+  credentialTask = null;
+  updateCredentialControls();
+  if (task.cancelled) void refreshRememberedToken();
+}
+
+function cancelCredentialTask() {
+  if (credentialTask) credentialTask.cancelled = true;
+}
+
+function openSettings() {
+  if (!published || credentialTask?.kind === 'connect' || credentialTask?.kind === 'forget') return;
+  $('repo-name').value = repositoryName();
+  $('github-token').value = '';
+  setError('settings-error'); openDialog('settings-dialog');
+  updateCredentialControls();
+}
+
+async function readRepositoryConnection(fullName, credential, task) {
   const [owner, repo] = fullName.split('/');
-  if ((isDirty() || pendingDeployment) && config.owner && `${config.owner}/${config.repo}` !== fullName) {
-    setError('settings-error', '当前有未发布草稿或等待上线的内容，请先完成发布，再切换仓库。'); return;
+  const currentRepository = repositoryName();
+  if ((isDirty() || pendingDeployment) && currentRepository && currentRepository.toLowerCase() !== fullName.toLowerCase()) {
+    throw new Error('当前有未发布草稿或等待上线的内容，请先完成发布，再切换仓库。');
   }
   const nextConfig = { ...config, owner, repo };
   if (['localhost', '127.0.0.1', '::1'].includes(new URL(nextConfig.siteUrl).hostname)) {
     nextConfig.siteUrl = repo.toLowerCase() === `${owner.toLowerCase()}.github.io`
       ? `https://${owner}.github.io/` : `https://${owner}.github.io/${encodeURIComponent(repo)}/`;
   }
-  $('connect-button').disabled = true; $('connect-button').textContent = '正在连接…';
+  const repoInfo = await verifyRepository(nextConfig, credential);
+  if (!isCurrentCredentialTask(task)) return null;
+  nextConfig.branch = repoInfo.default_branch || nextConfig.branch;
+  const remote = await fetchBoard(nextConfig, credential);
+  if (!isCurrentCredentialTask(task)) return null;
+  if (remote.board) remote.board = validateBoard(remote.board);
+  return { nextConfig, remote };
+}
+
+function applyRepositoryConnection({ nextConfig, remote }, credential, saved) {
+  token = credential; config = nextConfig; connected = true; rememberedToken = saved;
+  writeStorage(CONFIG_KEY, { owner: config.owner, repo: config.repo, branch: config.branch, siteUrl: config.siteUrl });
+  $('github-token').value = '';
+  if (pendingDeployment && remote.board?.revision !== pendingDeployment.revision) {
+    deploymentController?.abort(); pendingDeployment = null;
+  }
+  if (remote.board && !isDirty()) {
+    working = cloneBoard(remote.board); baseFingerprint = cardFingerprint(remote.board);
+    baseRevision = remote.board.revision; baseSha = remote.sha; conflict = false;
+  } else {
+    const baseline = checkBaseline({ baseSha, baseRevision, baseFingerprint }, remote);
+    baseSha = baseline.sha; conflict = baseline.conflict;
+  }
+  closeDialog('settings-dialog'); setAdmin(true); persist();
+}
+
+async function connectRepository(event) {
+  event.preventDefault();
+  if (credentialTask || busy || !published) return;
+  const fullName = $('repo-name').value.trim();
+  if (!/^[a-z0-9-]+\/[a-z0-9_.-]+$/i.test(fullName)) { setError('settings-error', '请填写“用户名/仓库名”。'); return; }
+  const sameRepository = fullName.toLowerCase() === repositoryName().toLowerCase();
+  const credential = $('github-token').value.trim() || (sameRepository ? token : '');
+  if (!credential) { setError('settings-error', '请输入只授予此仓库读写权限的访问令牌。'); return; }
+  const remember = $('remember-token')?.checked ?? true;
+  const task = startCredentialTask('connect');
   setError('settings-error');
   try {
-    const repoInfo = await verifyRepository(nextConfig, newToken);
-    nextConfig.branch = repoInfo.default_branch || nextConfig.branch;
-    const remote = await fetchBoard(nextConfig, newToken);
-    if (remote.board) remote.board = validateBoard(remote.board);
-    token = newToken; config = nextConfig; connected = true;
-    writeStorage(CONFIG_KEY, { owner: config.owner, repo: config.repo, branch: config.branch, siteUrl: config.siteUrl });
-    $('github-token').value = '';
-    if (pendingDeployment && remote.board?.revision !== pendingDeployment.revision) {
-      deploymentController?.abort(); pendingDeployment = null;
+    const connection = await readRepositoryConnection(fullName, credential, task);
+    if (!connection) return;
+    let saved = sameRepository && rememberedToken;
+    let storageMessage = '';
+    try {
+      if (remember) await saveRememberedToken(storePrefix, fullName, credential);
+      else await clearRememberedToken(storePrefix, fullName);
+      saved = remember;
+    } catch {
+      storageMessage = remember ? '浏览器未能记住这次的令牌，当前页面仍可使用。' : '浏览器暂时无法清除已记住的令牌，可在设置中重试。';
     }
-    if (remote.board) {
-      if (!isDirty()) {
-        working = cloneBoard(remote.board); baseFingerprint = cardFingerprint(remote.board);
-        baseRevision = remote.board.revision; baseSha = remote.sha; conflict = false;
-      } else {
-        const baseline = checkBaseline({ baseSha, baseRevision, baseFingerprint }, remote);
-        baseSha = baseline.sha; conflict = baseline.conflict;
+    if (!isCurrentCredentialTask(task)) return;
+    applyRepositoryConnection(connection, credential, saved);
+    toast(storageMessage || (conflict ? '已连接。云端有新版，本地草稿仍保留。' : '已连接，可以整理和发布卡片了。'));
+  } catch (error) {
+    if (isCurrentCredentialTask(task)) setError('settings-error', error.message);
+  } finally { finishCredentialTask(task); }
+}
+
+async function toggleAdmin() {
+  if (credentialTask || busy || !published) return;
+  if (isAdmin) { leaveAdmin(); return; }
+  const repository = repositoryName();
+  if (!repository) { openSettings(); return; }
+  const task = startCredentialTask('restore');
+  try {
+    let credential;
+    try { credential = await loadRememberedToken(storePrefix, repository); }
+    catch {
+      if (isCurrentCredentialTask(task)) {
+        openSettings();
+        if (rememberedToken) setError('settings-error', '暂时无法读取已记住的令牌，请重新输入。');
       }
-    } else {
-      const baseline = checkBaseline({ baseSha, baseRevision, baseFingerprint }, remote);
-      baseSha = baseline.sha; conflict = baseline.conflict;
+      return;
     }
-    closeDialog('settings-dialog'); setAdmin(true); persist();
-    toast(conflict ? '已连接。云端有新版，本地草稿仍保留。' : '已连接，可以整理和发布卡片了。');
-  } catch (error) { setError('settings-error', error.message); }
-  finally { $('connect-button').disabled = false; $('connect-button').textContent = '连接并管理 ↗'; }
+    if (!isCurrentCredentialTask(task)) return;
+    rememberedToken = Boolean(credential);
+    if (!credential) { openSettings(); return; }
+    const connection = await readRepositoryConnection(repository, credential, task);
+    if (!connection) return;
+    applyRepositoryConnection(connection, credential, true);
+    if (conflict) toast('已连接。云端有新版，本地草稿仍保留。');
+  } catch (error) {
+    if (!isCurrentCredentialTask(task)) return;
+    openSettings();
+    if (error.kind === 'auth' || error.kind === 'permission' || error.kind === 'not_found') {
+      setError('settings-error', '已记住的令牌无法连接这个仓库，请输入新的访问令牌。');
+    } else {
+      setError('settings-error', `${error.message} 可关闭此窗口后再次打开管理模式重试。`);
+    }
+  } finally { finishCredentialTask(task); }
+}
+
+async function forgetToken() {
+  const repository = repositoryName();
+  if (credentialTask || !rememberedToken || !repository
+      || $('repo-name').value.trim().toLowerCase() !== repository.toLowerCase()) return;
+  const task = startCredentialTask('forget');
+  setError('settings-error');
+  try {
+    await clearRememberedToken(storePrefix, repository);
+    if (!isCurrentCredentialTask(task)) return;
+    rememberedToken = false;
+    const remember = $('remember-token');
+    if (remember) remember.checked = false;
+    toast(connected ? '已清除记住的令牌。当前页面仍可继续管理。' : '已清除记住的令牌。');
+  } catch {
+    if (isCurrentCredentialTask(task)) setError('settings-error', '暂时无法清除已记住的令牌，请重试。');
+  } finally { finishCredentialTask(task); }
+}
+
+function leaveAdmin() {
+  if (credentialTask || busy) return;
+  token = ''; connected = false; setAdmin(false);
+  toast('已退出管理，当前显示公众看到的版本。');
 }
 function enterLocalMode() {
+  if (credentialTask) return;
   closeDialog('settings-dialog'); setAdmin(true);
   toast('已进入本地编辑。发布时再连接 GitHub。');
 }
@@ -522,6 +677,7 @@ async function boot() {
       } catch { toast('旧草稿格式无法读取，已保留原记录，请先备份。'); }
     }
     renderBoard(); updateStatus();
+    void refreshRememberedToken();
     if (pendingDeployment) checkDeployment();
   } catch (error) { $('board-error').hidden = false; $('board-grid').setAttribute('aria-busy', 'false'); }
 }
@@ -532,17 +688,21 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 }));
 document.querySelectorAll('dialog').forEach(dialog => {
   dialog.addEventListener('cancel', event => {
+    if (dialog.id === 'editor-dialog') { event.preventDefault(); return; }
     if (busy && dialog.id === 'publish-dialog') { event.preventDefault(); return; }
-    if (dialog.id === 'editor-dialog') { event.preventDefault(); closeEditor(); }
   });
   dialog.addEventListener('click', event => {
-    if (event.target !== dialog || busy) return;
+    if (event.target !== dialog || busy || dialog.id === 'editor-dialog') return;
     const rect = dialog.getBoundingClientRect();
     if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return;
-    if (dialog.id === 'editor-dialog') closeEditor(); else closeDialog(dialog.id);
+    closeDialog(dialog.id);
   });
 });
 $('editor-form').addEventListener('submit', finishEditor);
+$('body-size').addEventListener('change', event => {
+  $('rich-editor').dataset.bodySize = event.target.value;
+  saveEditorInput();
+});
 for (const id of ['card-title', 'card-url', 'card-link-label']) $(id).addEventListener('input', saveEditorInput);
 $('card-kind').addEventListener('change', () => { $('link-fields').hidden = !$('card-kind').checked; $('editor-dialog').dataset.kind = $('card-kind').checked ? 'link' : 'text'; saveEditorInput(); });
 $('link-form').addEventListener('submit', applyInlineLink);
@@ -550,12 +710,18 @@ $('unlink-button').addEventListener('click', () => { closeDialog('link-dialog');
 $('edit-card').addEventListener('click', () => openEditor(currentId));
 $('delete-card').addEventListener('click', () => openDialog('delete-dialog'));
 $('confirm-delete').addEventListener('click', deleteCurrentCard);
-$('admin-trigger').addEventListener('click', openSettings);
+$('admin-trigger').addEventListener('click', toggleAdmin);
 $('settings-button').addEventListener('click', openSettings);
 $('settings-form').addEventListener('submit', connectRepository);
-$('settings-dialog').addEventListener('close', () => { $('github-token').value = ''; });
+$('repo-name').addEventListener('input', updateCredentialControls);
+$('forget-token')?.addEventListener('click', forgetToken);
+$('settings-dialog').addEventListener('close', () => {
+  if ($('settings-dialog').open) return;
+  $('github-token').value = '';
+  if (credentialTask?.kind === 'connect') { cancelCredentialTask(); updateCredentialControls(); }
+});
 $('local-mode-button').addEventListener('click', enterLocalMode);
-$('leave-admin').addEventListener('click', () => { token = ''; connected = false; setAdmin(false); toast('已退出管理，当前显示公众看到的版本。'); });
+$('leave-admin').addEventListener('click', leaveAdmin);
 $('publish-button').addEventListener('click', openPublish);
 $('confirm-publish').addEventListener('click', submitPublish);
 $('export-draft').addEventListener('click', exportDraft);
@@ -564,7 +730,19 @@ $('retry-load').addEventListener('click', boot);
 window.addEventListener('pointermove', moveDrag, { passive: false });
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
-window.addEventListener('pagehide', () => { token = ''; deploymentController?.abort(); });
+window.addEventListener('pagehide', () => {
+  token = ''; connected = false;
+  cancelCredentialTask(); rememberedLookup = null;
+  $('github-token').value = '';
+  deploymentController?.abort();
+});
+window.addEventListener('pageshow', event => {
+  if (!event.persisted || !published) return;
+  for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+  editingId = null;
+  setAdmin(false);
+  void refreshRememberedToken();
+});
 window.addEventListener('storage', event => {
   if (event.key === DRAFT_KEY && isAdmin) {
     storageConflict = true; conflict = true; updateStatus('另一窗口有修改');

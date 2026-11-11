@@ -11,6 +11,13 @@ test('duplicate card ids and unsupported schemas cannot overwrite a board', () =
   assert.throws(() => validateBoard({ schemaVersion: 1, cards: [card, card] }));
   assert.throws(() => validateBoard({ schemaVersion: 2, cards: [] }));
 });
+test('body size survives reload while older cards keep their draft baseline', () => {
+  const card = { id: 'one', kind: 'text', title: '标题', body: '<p>正文</p>', url: '', linkLabel: '' };
+  const older = { schemaVersion: 1, cards: [card] };
+  assert.equal(cardFingerprint(validateBoard(older)), cardFingerprint(older));
+  const larger = { schemaVersion: 1, cards: [{ ...card, bodySize: 'large' }] };
+  assert.equal(validateBoard(larger).cards[0].bodySize, 'large');
+});
 test('swapping preserves every card and swaps only the two selected positions', () => {
   const cards = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
   assert.deepEqual(swapCards(cards, 'a', 'c').map(card => card.id), ['c', 'b', 'a']);

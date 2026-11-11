@@ -14,13 +14,15 @@ export function validateBoard(value) {
     if (!card || typeof card.id !== 'string' || !/^[\w-]{1,100}$/.test(card.id) || seen.has(card.id)) throw new Error('卡片编号重复或无效。');
     if (!['text', 'link'].includes(card.kind)) throw new Error('卡片类型无效。');
     seen.add(card.id);
-    return {
+    const normalized = {
       id: card.id, kind: card.kind,
       title: String(card.title || '').slice(0, 120),
       body: String(card.body || '').slice(0, 200000),
       url: String(card.url || '').slice(0, 4000),
       linkLabel: String(card.linkLabel || '').slice(0, 40),
     };
+    if (card.bodySize === 'large') normalized.bodySize = 'large';
+    return normalized;
   });
   return { schemaVersion: 1, revision: String(value.revision || ''), publishedAt: value.publishedAt || null, cards };
 }

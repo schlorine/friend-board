@@ -207,8 +207,29 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .empty-state p { margin: 0; font-size: 13px; }
 
 .site-footer { margin-block: 48px 0; min-height: 90px; padding-block: 23px; border-top: var(--line); display: flex; align-items: center; justify-content: flex-end; }
-.admin-trigger { border: 0; background: none; color: var(--muted); padding: 8px 0 8px 15px; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; white-space: nowrap; }
-.admin-trigger:hover { color: var(--ink); }
+.admin-trigger {
+  position: relative;
+  min-height: 32px;
+  padding: 5px 38px 5px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.admin-trigger::before, .admin-trigger::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.admin-trigger::before { box-sizing: border-box; right: 0; width: 28px; height: 16px; border: 1.5px solid var(--ink); background: var(--white); }
+.admin-trigger::after { right: 16px; width: 8px; height: 8px; background: var(--muted); transition: right .15s ease, background .15s ease; }
+.admin-trigger:hover, .admin-trigger[aria-pressed="true"] { color: var(--ink); }
+.admin-trigger[aria-pressed="true"]::before { background: var(--yellow); }
+.admin-trigger[aria-pressed="true"]::after { right: 4px; background: var(--ink); }
 
 .modal {
   width: min(680px, calc(100vw - 48px));
@@ -236,6 +257,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .icon-button svg { width: 17px; height: 17px; }
 .icon-button:hover { background: var(--yellow); }
 .modal-body { min-height: 0; padding: 26px 30px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.modal-editor .modal-body { overflow-x: hidden; }
 .modal-footer { flex: 0 0 auto; padding: 18px 30px; border-top: var(--line); display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
 .modal-footer .saved-note { margin-right: auto; }
 .modal-footer .button-danger { margin-right: auto; }
@@ -247,6 +269,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .reader-title { margin: 0 0 24px; font-size: 32px; line-height: 1.45; font-weight: 850; letter-spacing: -.9px; }
 .modal-reader .modal-header { min-height: 73px; padding-block: 24px; }
 .reader-body { font-size: 15px; line-height: 1.95; overflow-wrap: anywhere; }
+.reader-body[data-body-size="large"] { font-size: 18px; }
 .reader-body > :first-child { margin-top: 0; }
 .reader-body > :last-child { margin-bottom: 0; }
 .reader-body p { margin: 0 0 1em; }
@@ -281,6 +304,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 }
 .form-field input::placeholder, .form-field textarea::placeholder { color: #96938c; }
 .form-field input:focus, .form-field textarea:focus { outline: 2px solid #3f5dc7; outline-offset: 2px; }
+:is(.modal-editor, .modal-link) .form-field input:focus { outline: none; }
 .form-field input[aria-invalid="true"] { border-color: #ab2f22; }
 .field-note { display: block; margin: 7px 0 0; font-size: 11px; line-height: 1.7; color: var(--muted); }
 .field-note a { color: inherit; }
@@ -291,6 +315,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .checkbox-field input { width: 19px; height: 19px; accent-color: var(--ink); flex: 0 0 auto; margin: 0; cursor: pointer; }
 .checkbox-field > span:not(.type-swatch) { flex: 1; }
 .checkbox-field .field-note { margin-top: 3px; font-weight: 400; }
+.token-preference { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.token-preference .checkbox-field { margin: 0; }
 .type-swatch { width: 32px; height: 32px; flex: 0 0 32px; border: var(--line); background: var(--yellow); box-shadow: 2px 2px 0 var(--ink); }
 .checkbox-field:has(input:checked) .type-swatch { background: var(--blue); }
 .link-fields { padding: 20px; background: #e6effb; border: var(--line); margin: 0 0 2px; }
@@ -300,28 +326,32 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .form-error:empty { display: none; }
 .saved-note { color: var(--muted); font-size: 11px; line-height: 1.6; }
 
-.editor-toolbar, .ql-toolbar.ql-snow {
+.editor-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
   padding: 6px 8px;
   background: var(--paper);
   border: var(--line);
   border-bottom: 0;
   font-family: var(--font);
 }
+.editor-format-actions, .editor-format-actions.ql-toolbar.ql-snow { display: flex; align-items: center; gap: 2px; padding: 0; border: 0; }
 .editor-toolbar button, .ql-toolbar.ql-snow button { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 7px; border: 0; border-radius: 0; background: transparent; color: var(--ink); }
 .editor-toolbar button:hover, .ql-toolbar.ql-snow button:hover, .ql-toolbar.ql-snow button.ql-active { background: var(--yellow); }
 .editor-toolbar button[aria-pressed="true"] { background: var(--yellow); }
 .editor-toolbar button svg { width: 18px; height: 18px; }
-.toolbar-separator { height: 19px; width: 1px; background: #b9b6ad; margin-inline: 6px; }
+.toolbar-separator { height: 19px; width: 1px; background: #b9b6ad; margin-inline: 4px; }
+.editor-toolbar .body-size-field { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 0 auto; white-space: nowrap; }
+.body-size-field select { min-height: 28px; padding: 3px 4px; border: 1px solid var(--ink); border-radius: 0; background: var(--white); color: var(--ink); font-size: 12px; line-height: 1.4; }
+.body-size-field select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .ql-snow .ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: var(--ink); }
 .ql-snow .ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: var(--ink); }
-#rich-editor, #rich-editor.ql-container { border: var(--line); min-height: 220px; max-height: 340px; overflow: auto; background: #fff; font: 14px/1.9 var(--font); }
-#rich-editor .ql-editor { padding: 15px 16px; min-height: 216px; font: inherit; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+#rich-editor { height: auto; min-width: 0; min-height: 220px; overflow: visible; border: var(--line); background: #fff; font: 14px/1.9 var(--font); }
+#rich-editor[data-body-size="large"] { font-size: 17px; }
+#rich-editor .ql-editor { height: auto; min-width: 0; min-height: 216px; padding: 15px 16px; overflow: visible; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 #rich-editor .ql-editor:focus { outline: none; }
-#rich-editor:focus-within { outline: 2px solid #3f5dc7; outline-offset: 2px; }
 #rich-editor .ql-editor.ql-blank::before { color: #96938c; font-style: normal; left: 16px; right: 16px; }
 #rich-editor .ql-editor a { color: #23498d; }
 .ql-snow .ql-tooltip { z-index: 5; border: var(--line); box-shadow: 3px 3px 0 var(--ink); font: 12px/1.6 var(--font); }
@@ -410,7 +440,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .card-link-action { font-size: 12px; padding: 6px 10px; }
   .add-card { aspect-ratio: 1; }
   .site-footer { margin-top: 35px; min-height: 82px; padding-block: 20px; align-items: flex-start; }
-  .admin-trigger { padding-top: 0; font-size: 10px; }
+  .admin-trigger { font-size: 10px; }
   .modal, .modal-settings, .modal-link, .modal-confirm, .modal-publish { width: calc(100vw - 32px); max-height: calc(100dvh - 40px); box-shadow: 5px 5px 0 var(--ink); }
   .modal-header { padding: 20px 20px 18px; }
   .modal-header h2 { font-size: 23px; margin-right: 32px; }
@@ -420,6 +450,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .modal-footer .button { min-height: 39px; font-size: 12px; padding: 8px 13px; }
   .modal-footer .saved-note { font-size: 10px; }
   .reader-body { font-size: 14px; }
+  .reader-body[data-body-size="large"] { font-size: 17px; }
   .reader-title { margin-bottom: 20px; font-size: 27px; }
   .reader-link { padding: 15px; flex-wrap: wrap; gap: 12px; }
   .reader-link strong { font-size: 13px; }
@@ -427,7 +458,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .form-row { grid-template-columns: 1fr; gap: 18px; }
   .form-field input, .form-field textarea { font-size: 16px; }
   .link-fields { padding: 16px; }
-  #rich-editor, #rich-editor.ql-container { min-height: 200px; max-height: 280px; }
+  .editor-toolbar button, .editor-toolbar .ql-toolbar.ql-snow button { width: 28px; height: 28px; padding: 5px; }
+  #rich-editor { min-height: 200px; font-size: 16px; }
+  #rich-editor[data-body-size="large"] { font-size: 18px; }
   #rich-editor .ql-editor { min-height: 196px; }
   .toast { bottom: 20px; max-width: calc(100vw - 32px); width: max-content; padding: 11px 14px; gap: 12px; }
 }

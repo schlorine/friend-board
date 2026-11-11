@@ -13,7 +13,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 // Local preview intentionally exposes only the files needed by the website.
 const publicFiles = new Set([
   'index.html', 'styles.css', 'config.json', 'favicon.svg', 'data/board.json',
-  'scripts/app.js', 'scripts/model.js', 'scripts/github.js',
+  'scripts/app.js', 'scripts/model.js', 'scripts/github.js', 'scripts/credentials.js',
   'vendor/quill.js', 'vendor/quill.snow.css',
   'tests/viewport.html',
 ]);

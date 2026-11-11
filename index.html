@@ -10,9 +10,9 @@
   <title>NOTES</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./vendor/quill.snow.css">
-  <link rel="stylesheet" href="./styles.css?v=grid-4">
+  <link rel="stylesheet" href="./styles.css?v=edit-remember">
   <script src="./vendor/quill.js" defer></script>
-  <script src="./scripts/app.js?v=grid-4" type="module"></script>
+  <script src="./scripts/app.js?v=edit-remember" type="module"></script>
 </head>
 <body>
   <a class="skip-link" href="#board">跳到卡片</a>
@@ -36,7 +36,7 @@
         <div id="board-error" class="empty-state" hidden><h3>暂时没能打开看板</h3><p>请检查网络后重试，本地草稿会继续保留。</p><button id="retry-load" class="button button-light">重新加载</button></div>
       </section>
     </main>
-    <footer class="site-footer"><button id="admin-trigger" class="admin-trigger">管理看板 <span aria-hidden="true">↗</span></button></footer>
+    <footer class="site-footer"><button id="admin-trigger" class="admin-trigger" type="button" aria-pressed="false">管理看板</button></footer>
   </div>
 
   <dialog id="reader-dialog" class="modal modal-reader" aria-labelledby="reader-title">
@@ -50,12 +50,31 @@
     <form id="editor-form" novalidate>
       <div class="modal-body">
         <div class="form-field"><label for="card-title">标题</label><input id="card-title" name="title" maxlength="120" autocomplete="off" placeholder="给这一格起个名字"></div>
-        <div class="form-field"><label id="body-label">正文</label><div id="editor-toolbar" class="editor-toolbar" role="toolbar" aria-label="文字格式"><button type="button" class="ql-bold" aria-label="加粗" title="加粗"></button><button type="button" class="ql-italic" aria-label="斜体" title="斜体"></button><button type="button" class="ql-underline" aria-label="下划线" title="下划线"></button><span class="toolbar-separator" aria-hidden="true"></span><button type="button" class="ql-link" aria-label="插入超链接" title="插入超链接"></button></div><div id="rich-editor"></div></div>
+        <div class="form-field">
+          <label id="body-label">正文</label>
+          <div class="editor-toolbar">
+            <div id="editor-toolbar" class="editor-format-actions" role="toolbar" aria-label="文字格式">
+              <button type="button" class="ql-bold" aria-label="加粗" title="加粗"></button>
+              <button type="button" class="ql-italic" aria-label="斜体" title="斜体"></button>
+              <button type="button" class="ql-underline" aria-label="下划线" title="下划线"></button>
+              <span class="toolbar-separator" aria-hidden="true"></span>
+              <button type="button" class="ql-link" aria-label="插入超链接" title="插入超链接"></button>
+            </div>
+            <label class="body-size-field" for="body-size">
+              字号
+              <select id="body-size">
+                <option value="normal">标准</option>
+                <option value="large">较大</option>
+              </select>
+            </label>
+          </div>
+          <div id="rich-editor"></div>
+        </div>
         <label class="checkbox-field" for="card-kind"><input id="card-kind" type="checkbox"><span><strong>作为链接卡片</strong><span class="field-note">为这一格增加一个主链接入口，自动使用浅蓝色。</span></span><span class="type-swatch" aria-hidden="true"></span></label>
         <div id="link-fields" class="link-fields" hidden><div class="form-field"><label for="card-url">主链接网址</label><input id="card-url" name="url" type="url" placeholder="https://example.com" autocomplete="url" spellcheck="false"></div><div class="form-field"><label for="card-link-label">入口文字 <span class="optional">选填</span></label><input id="card-link-label" name="linkLabel" maxlength="40" placeholder="访问网站"></div></div>
         <p id="editor-error" class="form-error" role="alert" hidden></p>
       </div>
-      <div class="modal-footer"><span id="draft-save-note" class="saved-note" role="status">修改会自动留在本地</span><button type="submit" class="button button-primary">完成 <span aria-hidden="true">✓</span></button></div>
+      <div class="modal-footer"><span id="draft-save-note" class="saved-note" role="status">修改会自动留在本地</span><button type="submit" class="button button-primary">保存草稿 <span aria-hidden="true">✓</span></button></div>
     </form>
   </dialog>
 
@@ -66,7 +85,35 @@
 
   <dialog id="settings-dialog" class="modal modal-settings" aria-labelledby="settings-heading">
     <div class="modal-header"><div><p class="modal-kicker">JUST FOR THE AUTHOR</p><h2 id="settings-heading">管理看板</h2></div><button class="icon-button" data-close="settings-dialog" aria-label="关闭管理设置">×</button></div>
-    <form id="settings-form"><div class="modal-body"><p id="settings-intro" class="settings-intro">在这里整理卡片，写好后再发布给朋友。</p><div class="form-field"><label for="repo-name">GitHub 仓库</label><input id="repo-name" placeholder="用户名/仓库名" autocomplete="off" spellcheck="false"><p class="field-note">保存网页与公开内容的仓库。</p></div><div class="form-field"><label for="github-token">仓库访问令牌</label><input id="github-token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><p class="field-note">仅在当前页面会话中使用，关闭后清除。只需此仓库的 Contents 读写权限。</p></div><details class="setup-help"><summary>如何获取访问令牌？</summary><p>在 GitHub 创建细粒度访问令牌，选择这个仓库，并授予 Contents 的 Read and write 权限。请勿将令牌写进卡片。</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">前往 GitHub 设置 ↗</a></details><p id="settings-error" class="form-error" role="alert" hidden></p></div><div class="modal-footer"><button id="local-mode-button" type="button" class="button button-light">先在本地编辑</button><button id="connect-button" type="submit" class="button button-primary">连接并管理 ↗</button></div></form>
+    <form id="settings-form">
+      <div class="modal-body">
+        <p id="settings-intro" class="settings-intro">在这里整理卡片，写好后再发布给朋友。</p>
+        <div class="form-field">
+          <label for="repo-name">GitHub 仓库</label>
+          <input id="repo-name" placeholder="用户名/仓库名" autocomplete="off" spellcheck="false">
+          <p class="field-note">保存网页与公开内容的仓库。</p>
+        </div>
+        <div class="form-field">
+          <label for="github-token">仓库访问令牌</label>
+          <input id="github-token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-describedby="token-note">
+          <p id="token-note" class="field-note">只需此仓库的 Contents 读写权限。记住令牌后，可在此浏览器直接切换管理模式。</p>
+        </div>
+        <div class="token-preference">
+          <label class="checkbox-field" for="remember-token">
+            <input id="remember-token" type="checkbox" checked>
+            <span>在此浏览器记住令牌</span>
+          </label>
+          <button id="forget-token" type="button" class="button button-light button-small" hidden>清除已记住的令牌</button>
+        </div>
+        <details class="setup-help">
+          <summary>如何获取访问令牌？</summary>
+          <p>在 GitHub 创建细粒度访问令牌，选择这个仓库，并授予 Contents 的 Read and write 权限。请勿将令牌写进卡片。</p>
+          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">前往 GitHub 设置 ↗</a>
+        </details>
+        <p id="settings-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="modal-footer"><button id="local-mode-button" type="button" class="button button-light">先在本地编辑</button><button id="connect-button" type="submit" class="button button-primary">连接并管理 ↗</button></div>
+    </form>
   </dialog>
 
   <dialog id="publish-dialog" class="modal modal-publish" aria-labelledby="publish-heading">
