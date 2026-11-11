@@ -50,6 +50,8 @@ main,
   margin-inline: auto;
 }
 
+main { margin-top: 30px; }
+
 .site-header {
   min-height: 96px;
   padding-block: 23px;
@@ -80,11 +82,8 @@ main,
 }
 
 .brand-mark svg { width: 25px; height: 25px; }
-.brand-name { display: block; font-weight: 900; font-size: 19px; line-height: 1.3; letter-spacing: -.7px; }
-.brand-note { display: block; margin-top: 3px; font: 10px/1.3 var(--mono); letter-spacing: 1.6px; }
+.brand-name { display: block; margin: 0; font-weight: 900; font-size: 19px; line-height: 1.3; letter-spacing: .04em; }
 .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 13px; flex-wrap: wrap; }
-.public-note { display: inline-flex; align-items: center; gap: 12px; color: var(--muted); font-size: 11px; line-height: 1.6; }
-.public-note > span { font-size: 18px; line-height: 1; color: var(--ink); }
 
 .button {
   min-height: 43px;
@@ -119,51 +118,6 @@ main,
 .mode-pill.is-error { color: #ab2f22; }
 .mode-pill.is-busy::before { animation: status-pulse 1.1s ease-in-out infinite alternate; }
 
-.intro {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 48px;
-  align-items: center;
-  padding-block: 55px 47px;
-}
-
-.eyebrow {
-  margin: 0 0 15px;
-  color: var(--muted);
-  font: 11px/1.4 var(--mono);
-  font-weight: 600;
-  letter-spacing: 2.2px;
-}
-
-.intro h1 {
-  margin: 0;
-  font-size: clamp(38px, 4.8vw, 58px);
-  font-weight: 900;
-  letter-spacing: -.055em;
-  line-height: 1.18;
-  text-wrap: balance;
-}
-
-.intro h1 em { font-style: normal; background: var(--yellow); padding-inline: 3px; }
-.intro h1 span { white-space: nowrap; }
-.intro-copy { margin: 19px 0 0; max-width: 580px; color: #575650; font-size: 14px; line-height: 1.9; }
-.mobile-break { display: none; }
-.intro-mark { position: relative; width: 112px; height: 112px; margin: 0 28px 0 0; transform: rotate(-9deg); }
-.intro-mark svg { width: 100%; height: 100%; }
-.intro-mark > span { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); font: 8px/1.4 var(--mono); letter-spacing: .9px; white-space: nowrap; }
-
-.board-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.board-label { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 13px; font-weight: 750; letter-spacing: .3px; }
-.board-label::before { content: ""; display: block; width: 8px; height: 8px; border: 1.5px solid var(--ink); background: var(--ink); transform: rotate(45deg); }
-.board-count { color: var(--muted); font: 11px/1.4 var(--mono); white-space: nowrap; }
 .board-notice { margin: 0 0 20px; padding: 10px 14px; background: #fff7d7; border-left: 3px solid var(--ink); color: #61502c; font-size: 12px; line-height: 1.7; }
 .board-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 25px; }
 
@@ -251,9 +205,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .empty-state h2 { margin: 0 0 8px; color: var(--ink); font-size: 23px; }
 .empty-state p { margin: 0; font-size: 13px; }
 
-.site-footer { margin-block: 48px 0; min-height: 90px; padding-block: 23px; border-top: var(--line); display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.footer-note { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
-.footer-note strong { color: var(--ink); font-weight: 700; }
+.site-footer { margin-block: 48px 0; min-height: 90px; padding-block: 23px; border-top: var(--line); display: flex; align-items: center; justify-content: flex-end; }
 .admin-trigger { border: 0; background: none; color: var(--muted); padding: 8px 0 8px 15px; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; white-space: nowrap; }
 .admin-trigger:hover { color: var(--ink); }
 
@@ -431,8 +383,6 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 @media (max-width: 900px) {
   .site-header, main, .site-footer { width: calc(100% - 64px); }
   .board-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-  .intro { padding-block: 44px 38px; column-gap: 30px; }
-  .intro-mark { width: 90px; height: 90px; margin-right: 12px; }
   .card-title { font-size: 25px; }
   .card-preview { -webkit-line-clamp: 5; }
 }
@@ -440,28 +390,16 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 @media (max-width: 600px) {
   html { scrollbar-gutter: auto; }
   .site-header, main, .site-footer { width: calc(100% - 40px); }
+  main { margin-top: 22px; }
   .site-header { min-height: 82px; padding-block: 18px; gap: 14px; }
   .brand { gap: 11px; }
   .brand-mark { width: 35px; height: 35px; flex-basis: 35px; box-shadow: 2px 2px 0 var(--ink); }
   .brand-mark svg { width: 23px; height: 23px; }
   .brand-name { font-size: 17px; }
-  .brand-note { font-size: 8px; letter-spacing: 1.15px; margin-top: 3px; }
   .header-actions { gap: 8px; max-width: 53%; }
   .header-actions .button { min-height: 36px; padding: 7px 11px; font-size: 11px; gap: 6px; box-shadow: 2px 2px 0 var(--ink); }
   .header-actions .button svg { width: 14px; height: 14px; }
   .mode-pill { font-size: 10px; }
-  .public-note { font-size: 10px; gap: 6px; max-width: 110px; text-align: right; }
-  .public-note > span { font-size: 15px; }
-  .intro { display: block; padding-block: 35px 32px; }
-  .eyebrow { font-size: 9px; letter-spacing: 1.7px; margin-bottom: 12px; }
-  .intro h1 { font-size: clamp(34px, 8vw, 42px); letter-spacing: -.05em; line-height: 1.25; max-width: 85%; }
-  .intro-copy { margin-top: 14px; font-size: 12px; line-height: 1.9; max-width: 90%; }
-  .mobile-break { display: inline; }
-  .intro-mark { position: absolute; width: 57px; height: 57px; right: 0; top: 39px; margin: 0; }
-  .intro-mark > span { display: none; }
-  .board-topline { margin-bottom: 17px; gap: 10px; }
-  .board-label { font-size: 12px; gap: 8px; }
-  .board-count { font-size: 10px; }
   .board-grid { grid-template-columns: minmax(0, 1fr); gap: 23px; }
   .card { padding: 25px; }
   .card-title { font-size: 27px; margin-top: 25px; margin-bottom: 16px; }
@@ -472,8 +410,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .card-open { font-size: 12px; }
   .card-link-action { font-size: 12px; padding: 6px 10px; }
   .add-card { aspect-ratio: 1; }
-  .site-footer { margin-top: 35px; min-height: 82px; padding-block: 20px; align-items: flex-start; gap: 14px; }
-  .footer-note { font-size: 10px; }
+  .site-footer { margin-top: 35px; min-height: 82px; padding-block: 20px; align-items: flex-start; }
   .admin-trigger { padding-top: 0; font-size: 10px; }
   .modal, .modal-settings, .modal-link, .modal-confirm, .modal-publish { width: calc(100vw - 32px); max-height: calc(100dvh - 40px); box-shadow: 5px 5px 0 var(--ink); }
   .modal-header { padding: 20px 20px 18px; }
@@ -498,11 +435,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 
 @media (max-width: 370px) {
   .site-header, main, .site-footer { width: calc(100% - 32px); }
-  .brand-note { display: none; }
   .card { padding: 21px; }
   .card-title { font-size: 24px; margin-top: 16px; }
   .card-preview { font-size: 13px; -webkit-line-clamp: 4; }
-  .intro-mark { width: 47px; height: 47px; }
   .modal-footer .saved-note { width: 100%; }
 }
 

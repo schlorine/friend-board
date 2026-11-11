@@ -137,7 +137,6 @@ function renderBoard() {
     empty.append(makeElement('h3', '', '好东西，慢慢收集。'), makeElement('p', '', '这里暂时还没有卡片，过一阵再来看看。'));
     grid.append(empty);
   }
-  $('board-count').textContent = `${String(board.cards.length).padStart(2, '0')} 张卡片`;
   grid.setAttribute('aria-busy', 'false');
 }
 function updateStatus(message) {
@@ -156,7 +155,6 @@ function setAdmin(enabled) {
   isAdmin = enabled;
   document.body.classList.toggle('is-admin', enabled);
   for (const id of ['publish-status', 'settings-button', 'publish-button', 'leave-admin']) $(id).hidden = !enabled;
-  $('public-note').hidden = enabled;
   $('admin-trigger').textContent = enabled ? '发布设置 ↗' : '管理看板 ↗';
   renderBoard(); updateStatus();
 }
