@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": "9544d76f-bee6-4444-80ce-595ec40d6409",
-  "publishedAt": "2026-11-11T11:25:16.480Z",
+  "revision": "913ac3f2-fa0b-4dfa-a5d9-e7ef9c2b412b",
+  "publishedAt": "2026-11-11T14:37:18.284Z",
   "cards": [
     {
       "id": "welcome",
@@ -49,6 +49,14 @@
       "title": "考研历年真题",
       "body": "<p>包括英语、政治、数学三科共六份试题，为了方便下载我上传到了我的123云盘~（<em>btw我看123云盘是免登录不限速下载，整合到这里你可以一键操作方便些，如果实际下载比较麻烦以后换别的渠道或者直接贴github原链接了）</em></p><p>如果你需要github原链接可以看：https://github.com/CHNragdoll/anki-pipeline</p>",
       "url": "https://1857789216.share.123pan.cn/123pan/mtHSvd-UHfb",
+      "linkLabel": "123云盘"
+    },
+    {
+      "id": "dfad6f25-6e2b-4f1b-a276-77b482385916",
+      "kind": "link",
+      "title": "【小轩整理】考研信息",
+      "body": "<p>完成了一图流~包括考研时间线、相关概念和各科题型与考查范围ww</p>",
+      "url": "https://1857789216.share.123pan.cn/123pan/mtHSvd-4abb?pwd=T8Xs#",
       "linkLabel": "123云盘"
     }
   ]
