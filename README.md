@@ -14,6 +14,8 @@ node scripts/serve.mjs
 
 点击页面底部“管理看板”，可先选择“先在本地编辑”。点击“＋”填写卡片；已有卡片先进入阅读弹窗，再点击“编辑卡片”。勾选“作为链接卡片”后填写主链接，卡片颜色随类型自动改变。
 
+正文工具栏支持 H2、H3、有序和无序列表。在行首输入 `##`、`###`、`1.` 或 `-` 再按空格，也可以直接排版。粘贴 Markdown 原文时，常用的标题、列表、粗体、斜体和链接会自动转换，单个 `#` 保留为文字。点击“保存草稿”，保存成功后会关闭编辑窗口。
+
 修改自动保存在当前浏览器的本地草稿中，尚未发布的内容不会提交到仓库。浏览器、设备或站点地址改变后，草稿不会自动转移；清除网站数据也会清除本地草稿。写好后，使用“发布更改”统一提交本次内容、顺序和新增删除操作。
 
 ## GitHub Pages 托管
@@ -32,10 +34,13 @@ scripts/app.js
 scripts/model.js
 scripts/github.js
 scripts/credentials.js
+scripts/markdown.js
 data/board.json
 vendor/quill.js
 vendor/quill.snow.css
 vendor/LICENSE
+vendor/markdown-it.min.js
+vendor/MARKDOWN-IT-LICENSE
 ```
 
 在 GitHub 仓库的 **Settings → Pages → Build and deployment** 中，将 Source 设为 **Deploy from a branch**，选择 `main` 和 `/(root)` 后保存。无需额外构建流程。初次发布地址通常为 `https://用户名.github.io/仓库名/`。更新可能需要等待最多约十分钟。
@@ -70,4 +75,4 @@ vendor/LICENSE
 node --test tests/*.test.mjs
 ```
 
-富文本编辑器固定为 Quill 2.0.3，资源已保存在 `vendor/` 中，正常启动不需要访问 CDN。BSD-3-Clause 许可证见 `vendor/LICENSE`，来源与 SHA256 分别见 `vendor/SOURCE.md` 和 `vendor/SHA256SUMS`。需要恢复供应文件时运行 `node scripts/fetch-vendor.mjs`；已有校验清单时会验证下载内容，校验失败不会替换文件。
+Quill 2.0.3 和 markdown-it 15.0.3 的资源保存在 `vendor/` 中。许可证、来源与校验值见该目录中的 `LICENSE`、`MARKDOWN-IT-LICENSE`、`SOURCE.md` 和 `SHA256SUMS`。运行 `node scripts/fetch-vendor.mjs` 可按校验清单恢复依赖文件。

@@ -10,9 +10,10 @@
   <title>NOTES</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./vendor/quill.snow.css">
-  <link rel="stylesheet" href="./styles.css?v=edit-remember">
+  <link rel="stylesheet" href="./styles.css?v=markdown-edit">
+  <script src="./vendor/markdown-it.min.js" defer></script>
   <script src="./vendor/quill.js" defer></script>
-  <script src="./scripts/app.js?v=edit-remember" type="module"></script>
+  <script src="./scripts/app.js?v=markdown-edit" type="module"></script>
 </head>
 <body>
   <a class="skip-link" href="#board">跳到卡片</a>
@@ -52,12 +53,16 @@
         <div class="form-field"><label for="card-title">标题</label><input id="card-title" name="title" maxlength="120" autocomplete="off" placeholder="给这一格起个名字"></div>
         <div class="form-field">
           <label id="body-label">正文</label>
-          <div class="editor-toolbar">
-            <div id="editor-toolbar" class="editor-format-actions" role="toolbar" aria-label="文字格式">
+          <div class="editor-toolbar" role="group" aria-label="正文格式">
+            <div id="editor-toolbar" class="editor-format-actions">
               <button type="button" class="ql-bold" aria-label="加粗" title="加粗"></button>
               <button type="button" class="ql-italic" aria-label="斜体" title="斜体"></button>
               <button type="button" class="ql-underline" aria-label="下划线" title="下划线"></button>
+              <button type="button" class="ql-header" value="2" aria-label="二级标题" title="二级标题（H2）"></button>
+              <button type="button" class="ql-header" value="3" aria-label="三级标题" title="三级标题（H3）"></button>
               <span class="toolbar-separator" aria-hidden="true"></span>
+              <button type="button" class="ql-list" value="ordered" aria-label="有序列表" title="有序列表"></button>
+              <button type="button" class="ql-list" value="bullet" aria-label="无序列表" title="无序列表"></button>
               <button type="button" class="ql-link" aria-label="插入超链接" title="插入超链接"></button>
             </div>
             <label class="body-size-field" for="body-size">

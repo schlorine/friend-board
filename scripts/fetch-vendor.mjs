@@ -4,12 +4,18 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const vendorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'vendor');
-const version = '2.0.3';
-const files = [
-  { name: 'quill.js', source: `https://cdn.jsdelivr.net/npm/quill@${version}/dist/quill.js` },
-  { name: 'quill.snow.css', source: `https://cdn.jsdelivr.net/npm/quill@${version}/dist/quill.snow.css` },
-  { name: 'LICENSE', source: `https://cdn.jsdelivr.net/npm/quill@${version}/LICENSE` },
+const quillVersion = '2.0.3';
+const markdownVersion = '15.0.3';
+const quillFiles = [
+  { name: 'quill.js', source: `https://cdn.jsdelivr.net/npm/quill@${quillVersion}/dist/quill.js` },
+  { name: 'quill.snow.css', source: `https://cdn.jsdelivr.net/npm/quill@${quillVersion}/dist/quill.snow.css` },
+  { name: 'LICENSE', source: `https://cdn.jsdelivr.net/npm/quill@${quillVersion}/LICENSE` },
 ];
+const markdownFiles = [
+  { name: 'markdown-it.min.js', source: `https://cdn.jsdelivr.net/npm/markdown-it@${markdownVersion}/dist/browser/markdown-it.umd.min.js` },
+  { name: 'MARKDOWN-IT-LICENSE', source: `https://cdn.jsdelivr.net/npm/markdown-it@${markdownVersion}/LICENSE` },
+];
+const files = [...quillFiles, ...markdownFiles];
 const manifestFile = resolve(vendorRoot, 'SHA256SUMS');
 let expected = new Map();
 try {
@@ -41,7 +47,11 @@ for (const file of downloads) {
   console.log(`${file.name}: ${file.bytes.length} bytes, SHA256 ${file.hash}`);
 }
 await writeFile(manifestFile, downloads.map((file) => `${file.hash}  ${file.name}\n`).join(''));
-await writeFile(resolve(vendorRoot, 'SOURCE.md'), `# Quill ${version}\n\n` +
-  '来源为 Quill 官方文档所使用的 jsDelivr npm 分发。所有资源已随网站保存，访客无需访问 CDN。\n\n' +
-  downloads.map((file) => `- ${file.name}: ${file.source}`).join('\n') + '\n\n' +
-  '官方网站：https://quilljs.com/\n\n许可证：BSD-3-Clause，见本目录 LICENSE。\n');
+await writeFile(resolve(vendorRoot, 'SOURCE.md'), '# 第三方资源\n\n' +
+  '以下文件取自 jsDelivr 的 npm 分发，随网站一同保存。运行 `node scripts/fetch-vendor.mjs` 可恢复资源，下载结果会与 `SHA256SUMS` 中的记录核对。\n\n' +
+  `## Quill ${quillVersion}\n\n` +
+  quillFiles.map((file) => `- ${file.name}: ${file.source}`).join('\n') + '\n\n' +
+  '[官方网站](https://quilljs.com/) · BSD-3-Clause，见本目录 `LICENSE`。\n\n' +
+  `## markdown-it ${markdownVersion}\n\n` +
+  markdownFiles.map((file) => `- ${file.name}: ${file.source}`).join('\n') + '\n\n' +
+  `[npm 版本信息](https://registry.npmjs.org/markdown-it/${markdownVersion}) · MIT，见本目录 \`MARKDOWN-IT-LICENSE\`。\n`);

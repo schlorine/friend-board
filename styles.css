@@ -273,11 +273,24 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .reader-body > :first-child { margin-top: 0; }
 .reader-body > :last-child { margin-bottom: 0; }
 .reader-body p { margin: 0 0 1em; }
-.reader-body h1, .reader-body h2, .reader-body h3 { line-height: 1.5; }
+.reader-body h1 { line-height: 1.5; }
+.reader-body :is(h2, h3),
+#rich-editor .ql-editor :is(h2, h3) {
+  margin: .85em 0 .32em;
+  font-weight: 800;
+  line-height: 1.45;
+}
+.reader-body h2, #rich-editor .ql-editor h2 { font-size: 1.38em; }
+.reader-body h3, #rich-editor .ql-editor h3 { font-size: 1.17em; }
 .reader-body strong, .reader-body b { font-weight: 800; }
 .reader-body a { color: #23498d; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 .reader-body a:hover { color: #102c5b; background: #e4edff; }
-.reader-body ul, .reader-body ol { padding-left: 1.5em; }
+.reader-body :is(ul, ol) {
+  margin-block: .35em .85em;
+  padding-inline-start: 1.5em;
+}
+.reader-body li + li { margin-top: .18em; }
+.reader-body li > :is(ul, ol) { margin-block: .2em; }
 .reader-body blockquote { margin: 1em 0; padding-left: 16px; border-left: 3px solid var(--ink); color: var(--muted); }
 .reader-link { margin-top: 27px; padding: 20px; background: var(--blue); border: var(--line); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .reader-link small { display: block; color: #3b4b63; font: 10px/1.5 var(--mono); margin-bottom: 3px; }
@@ -330,14 +343,14 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
   padding: 6px 8px;
   background: var(--paper);
   border: var(--line);
   border-bottom: 0;
   font-family: var(--font);
 }
-.editor-format-actions, .editor-format-actions.ql-toolbar.ql-snow { display: flex; align-items: center; gap: 2px; padding: 0; border: 0; }
+.editor-format-actions { display: contents; }
 .editor-toolbar button, .ql-toolbar.ql-snow button { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 7px; border: 0; border-radius: 0; background: transparent; color: var(--ink); }
 .editor-toolbar button:hover, .ql-toolbar.ql-snow button:hover, .ql-toolbar.ql-snow button.ql-active { background: var(--yellow); }
 .editor-toolbar button[aria-pressed="true"] { background: var(--yellow); }
@@ -354,6 +367,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 #rich-editor .ql-editor:focus { outline: none; }
 #rich-editor .ql-editor.ql-blank::before { color: #96938c; font-style: normal; left: 16px; right: 16px; }
 #rich-editor .ql-editor a { color: #23498d; }
+#rich-editor .ql-editor :is(ul, ol) { margin-block: .3em .65em; }
+#rich-editor .ql-editor li + li { margin-top: .12em; }
+#rich-editor .ql-editor > :first-child { margin-top: 0; }
+#rich-editor .ql-editor > :last-child { margin-bottom: 0; }
 .ql-snow .ql-tooltip { z-index: 5; border: var(--line); box-shadow: 3px 3px 0 var(--ink); font: 12px/1.6 var(--font); }
 .ql-toolbar.ql-snow .ql-formats { margin-right: 6px; }
 
@@ -459,6 +476,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .form-field input, .form-field textarea { font-size: 16px; }
   .link-fields { padding: 16px; }
   .editor-toolbar button, .editor-toolbar .ql-toolbar.ql-snow button { width: 28px; height: 28px; padding: 5px; }
+  .toolbar-separator { display: none; }
   #rich-editor { min-height: 200px; font-size: 16px; }
   #rich-editor[data-body-size="large"] { font-size: 18px; }
   #rich-editor .ql-editor { min-height: 196px; }

@@ -14,7 +14,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 const publicFiles = new Set([
   'index.html', 'styles.css', 'config.json', 'favicon.svg', 'data/board.json',
   'scripts/app.js', 'scripts/model.js', 'scripts/github.js', 'scripts/credentials.js',
-  'vendor/quill.js', 'vendor/quill.snow.css',
+  'scripts/markdown.js', 'vendor/quill.js', 'vendor/quill.snow.css', 'vendor/markdown-it.min.js',
   'tests/viewport.html',
 ]);
 const contentTypes = {

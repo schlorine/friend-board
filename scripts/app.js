@@ -1,4 +1,5 @@
 import { safeUrl, validateBoard, cloneBoard, cardFingerprint, swapCards, inferConfig, checkBaseline } from './model.js?v=edit-remember';
+import { markdownClipboardHTML } from './markdown.js';
 import { fetchBoard, verifyRepository, publishBoard, waitForLive } from './github.js';
 import { hasRememberedToken, loadRememberedToken, saveRememberedToken, clearRememberedToken } from './credentials.js';
 
@@ -24,14 +25,15 @@ function writeStorage(key, value) {
 }
 function isDirty() { return Boolean(working && cardFingerprint(working) !== baseFingerprint); }
 function persist() {
-  if (!working) return;
-  if (storageConflict) { updateStatus(); return; }
+  if (!working) return false;
+  if (storageConflict) { updateStatus(); return false; }
   const ok = writeStorage(DRAFT_KEY, {
     version: 1, board: working, baseRevision, baseSha, baseFingerprint,
     pendingDeployment, conflict, savedAt: new Date().toISOString(),
   });
   if (!ok) toast('浏览器暂时无法保存草稿，请勿关闭页面；可在发布窗口下载备份。');
   updateStatus();
+  return ok;
 }
 function toast(message, actionLabel = '', action = null) {
   clearTimeout(toastTimer);
@@ -52,7 +54,7 @@ function closeDialog(id) { if ($(id).open) $(id).close(); }
 // A small allowlist keeps stored rich text inert, even when content is changed outside the editor.
 function sanitizeHTML(html) {
   const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
-  const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'A', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+  const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'A', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
   const drop = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE', 'FORM', 'INPUT', 'BUTTON', 'TEXTAREA', 'LINK', 'META']);
   function clean(parent) {
     for (const node of [...parent.childNodes]) {
@@ -76,7 +78,7 @@ function sanitizeHTML(html) {
 }
 function plainText(html) {
   const doc = new DOMParser().parseFromString(sanitizeHTML(html), 'text/html');
-  for (const node of doc.querySelectorAll('p,li,br')) node.append(doc.createTextNode('\n'));
+  for (const node of doc.querySelectorAll('p,h2,h3,li,blockquote,br')) node.append(doc.createTextNode('\n'));
   return doc.body.textContent.trim();
 }
 function contentful(card) { return Boolean(card.title.trim() || plainText(card.body) || (card.kind === 'link' && card.url.trim())); }
@@ -174,17 +176,70 @@ function openReader(id) {
   $('reader-admin-actions').hidden = !isAdmin;
   openDialog('reader-dialog');
 }
+function formatMarkdownLine(range, context) {
+  const marker = context.prefix;
+  if (context.offset !== marker.length) return true;
+  const editor = this.quill;
+  const start = range.index - marker.length;
+  const attributes = marker.startsWith('#')
+    ? { header: marker.length }
+    : { list: /^\d/.test(marker) ? 'ordered' : 'bullet' };
+  const Delta = window.Quill.import('delta');
+  const change = new Delta().retain(start).delete(marker.length)
+    .retain(context.line.length() - marker.length - 1).retain(1, attributes);
+  editor.history.cutoff();
+  editor.updateContents(change, 'user');
+  editor.setSelection(start, 0, 'silent');
+  editor.history.cutoff();
+  return false;
+}
+function pasteMarkdown(event) {
+  const clipboard = event.clipboardData;
+  if (!clipboard || event.defaultPrevented || !quill.isEnabled() || clipboard.files?.length) return;
+  const explicitMarkdown = clipboard.getData('text/markdown');
+  if (!explicitMarkdown && clipboard.getData('text/html')) return;
+  const source = explicitMarkdown || clipboard.getData('text/plain');
+  const html = markdownClipboardHTML(source);
+  if (!html && !explicitMarkdown) return;
+  const range = quill.getSelection(true);
+  if (!range) return;
+  const paste = html ? quill.clipboard.convert({ html: sanitizeHTML(html) }) : quill.clipboard.convert({ text: source });
+  if (!paste.length()) return;
+  event.preventDefault();
+  const Delta = window.Quill.import('delta');
+  quill.history.cutoff();
+  quill.updateContents(new Delta().retain(range.index).delete(range.length).concat(paste), 'user');
+  quill.setSelection(range.index + paste.length(), 0, 'silent');
+  quill.scrollSelectionIntoView();
+  quill.history.cutoff();
+}
 function initEditor() {
   if (quill) return;
   if (!window.Quill) throw new Error('文字编辑器未能载入，请刷新页面重试。');
+  const Delta = window.Quill.import('delta');
   quill = new window.Quill('#rich-editor', {
     theme: 'snow', placeholder: '这一格，想写点什么？',
-    formats: ['bold', 'italic', 'underline', 'link'],
-    modules: { toolbar: { container: '#editor-toolbar', handlers: { link: openInlineLink } }, history: { userOnly: true } },
+    formats: ['bold', 'italic', 'underline', 'link', 'header', 'list', 'indent', 'blockquote'],
+    modules: {
+      toolbar: { container: '#editor-toolbar', handlers: { link: openInlineLink } },
+      history: { userOnly: true },
+      clipboard: { matchers: [
+        ['h1,h4,h5,h6', (_node, delta) => delta.compose(new Delta().retain(delta.length(), { header: null }))],
+      ] },
+      keyboard: { bindings: {
+        'list autofill': {
+          key: ' ', shiftKey: null, collapsed: true,
+          format: { header: false, list: false, blockquote: false },
+          prefix: /^(?:#{2,3}|\d+\.|[-+*])$/,
+          handler: formatMarkdownLine,
+        },
+      } },
+    },
   });
   quill.root.setAttribute('aria-labelledby', 'body-label');
   quill.root.setAttribute('role', 'textbox');
   quill.root.setAttribute('aria-multiline', 'true');
+  quill.root.addEventListener('paste', pasteMarkdown, { capture: true });
   quill.on('text-change', () => { if (!editorLoading) saveEditorInput(); });
 }
 function openEditor(id) {
@@ -219,29 +274,42 @@ function getEditorCard() {
   return card;
 }
 function saveEditorInput() {
-  if (editorLoading || !editingId || !isAdmin || busy) return;
-  const card = getEditorCard();
+  if (editorLoading || !editingId || !isAdmin || busy) return false;
+  return saveCardDraft(getEditorCard());
+}
+function saveCardDraft(card) {
   const index = working.cards.findIndex(item => item.id === editingId);
   if (index >= 0) working.cards[index] = card;
   else if (contentful(card)) working.cards.push(card);
-  persist();
+  const saved = persist();
   $('draft-save-note').textContent = storageConflict ? '其他窗口有修改，请先备份本窗口草稿' : storageOK ? '草稿已保存在本地 · 尚未发布' : '本地保存不可用，请勿关闭页面';
+  return saved;
 }
 function finishEditor(event) {
   event?.preventDefault();
+  if (!editingId || !isAdmin || busy) return;
   const card = getEditorCard();
   if (!contentful(card)) { setError('editor-error', '先写一点标题或正文，再保存这一格。'); return; }
   if (card.kind === 'link' && !safeUrl(card.url)) { setError('editor-error', '请填写以 https:// 或 http:// 开头的主链接网址。'); $('card-url').focus(); return; }
-  setError('editor-error');
-  saveEditorInput();
+  if (!saveCardDraft(card)) {
+    setError('editor-error', storageConflict ? '另一窗口更新了草稿。请先备份本窗口的内容。' : '浏览器未能保存草稿，当前输入仍在。');
+    return;
+  }
+  closeEditor({ draftSaved: true });
+  toast('草稿已保存');
 }
-function closeEditor() {
+function closeEditor({ draftSaved = false } = {}) {
   if (quill && editingId) {
-    saveEditorInput();
-    const index = working.cards.findIndex(card => card.id === editingId);
-    if (isNewCard && index >= 0 && !contentful(working.cards[index])) working.cards.splice(index, 1);
+    if (!draftSaved) {
+      saveEditorInput();
+      const index = working.cards.findIndex(card => card.id === editingId);
+      if (isNewCard && index >= 0 && !contentful(working.cards[index])) {
+        working.cards.splice(index, 1);
+        persist();
+      }
+    }
     editingId = null;
-    persist(); renderBoard();
+    renderBoard();
   }
   closeDialog('link-dialog'); closeDialog('editor-dialog');
 }
